@@ -1,35 +1,21 @@
+var http = require('http');
+var twitter = require('twit');
 
-/**
- * Module dependencies.
- */
 
-var express = require('express')
-  , routes = require('./routes')
-  , user = require('./routes/user')
-  , http = require('http')
-  , path = require('path');
+var requestListener = function (req, res) {
+  res.writeHead(200, {'Content-Type': 'application/json'});
 
-var app = express();
+  var t = new twitter({
+        consumer_key : process.env.consumer_key,
+        consumer_secret :  process.env.consumer_secret,
+        access_token :  process.env.access_token,
+        access_token_secret : process.env.access_token_secret
+      });
+  t.get('statuses/user_timeline', {screen_name: 'ppiplewar' , count: 2} , function(err, resp){
+    if (err) console.log(err);
+     res.end(JSON.stringify(resp));
+  });
+};
 
-// all environments
-app.set('port', process.env.PORT || 3000);
-app.set('views', __dirname + '/views');
-app.set('view engine', 'jade');
-app.use(express.favicon());
-app.use(express.logger('dev'));
-app.use(express.bodyParser());
-app.use(express.methodOverride());
-app.use(app.router);
-app.use(express.static(path.join(__dirname, 'public')));
-
-// development only
-if ('development' == app.get('env')) {
-  app.use(express.errorHandler());
-}
-
-app.get('/', routes.index);
-app.get('/users', user.list);
-
-http.createServer(app).listen(app.get('port'), function(){
-  console.log('Express server listening on port ' + app.get('port'));
-});
+var server = http.createServer(requestListener);
+server.listen(8080);
